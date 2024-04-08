@@ -8,7 +8,7 @@ from app.cfg import SECRET_KEY, HASHING_ALGORITHM
 from jose import jwt
 import datetime
 from typing import Annotated
-from auth import get_current_user
+from app.routers.auth import get_current_user
 
 journey_router = APIRouter(prefix="/journeys")
 
@@ -69,8 +69,8 @@ def end_journey(end_journey: schemas.EndJourney,
         current_user.experience += journey.experience_to_get
     
     db.commit()
-    return JSONResponse(content={"message": f"Journey with id: '{end_journey.id}' has ended with status: '{MAP_STATUS_TO_TEXT[end_journey.end_type]}',
-                                  experience:{current_user.experience}"})
+    return JSONResponse(content={"message": f"Journey with id: '{end_journey.id}' has ended with status: '{MAP_STATUS_TO_TEXT[end_journey.end_type]}'",
+                                  "experience": current_user.experience})
 
 
 @journey_router.get('/get_my_journeys', response_model=schemas.JourneyResponseModel)

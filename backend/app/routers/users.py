@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app import schemas as schemas, models as models
 from app.database import get_db
-from auth import get_current_user
+from app.routers.auth import get_current_user
 from typing import Annotated
 
 
