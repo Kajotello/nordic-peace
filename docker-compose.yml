@@ -1,56 +1,54 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:latest
-    container_name: hacknarock_postgres
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_DB: nordic_peace_db
-      POSTGRES_USER: nordic_peace
-      POSTGRES_PASSWORD: nordic_peace
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - shared-network
+    postgres:
+        image: postgres:latest
+        container_name: hacknarock_postgres
+        ports:
+            - '5432:5432'
+        environment:
+            POSTGRES_DB: nordic_peace_db
+            POSTGRES_USER: nordic_peace
+            POSTGRES_PASSWORD: nordic_peace
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+        networks:
+            - shared-network
 
-  redis:
-    image: redis:latest
-    container_name: hacknarock_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      - shared-network
+    redis:
+        image: redis:latest
+        container_name: hacknarock_redis
+        ports:
+            - '6379:6379'
+        volumes:
+            - redis-data:/data
+        networks:
+            - shared-network
 
-  api:
-    build: ./backend
-    container_name: hacknarock_backend
-    ports:
-      - "8080:80"
-    command: bash -c "uvicorn app.main:app --host 0.0.0.0 --port 80"
-    working_dir: /code
-    volumes:
-      - ./backend/app:/code/app
-    depends_on:
-      - postgres
-      - redis
-    networks:
-      - shared-network
-    env_file:
-      - .env
-  
-  frontend:
-    build: ./frontend
-    container_name: hacknarock_frontend
-    ports:
-      - "8090:80"
+    api:
+        build: ./backend
+        container_name: hacknarock_backend
+        ports:
+            - '8080:80'
+        command: bash -c "uvicorn app.main:app --host 0.0.0.0 --port 80"
+        working_dir: /code
+        volumes:
+            - ./backend/app:/code/app
+        depends_on:
+            - postgres
+            - redis
+        networks:
+            - shared-network
+
+    # frontend:
+    #   build: ./frontend
+    #   container_name: hacknarock_frontend
+    #   ports:
+    #     - "8090:80"
 
 volumes:
-  postgres-data:
-  redis-data:
+    postgres-data:
+    redis-data:
 
 networks:
-  shared-network:
+    shared-network:

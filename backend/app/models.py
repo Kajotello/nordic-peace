@@ -17,23 +17,14 @@ class FollowedFriends(Base):
     following_user_id = Column(Integer, ForeignKey('users.id'))
     followed_user_id = Column(Integer, ForeignKey('users.id'))
 
-class Ships(Base):
-    __tablename__ = 'ships'
-    id = Column(Integer, primary_key=True, index=True)
-    tier = Column(Integer)
-    user_id = Column(Integer, ForeignKey('users.id'))
-
 class Journey(Base):
     __tablename__ = 'journeys'
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     ship_tier = Column(Integer)
     duration = Column(Integer)
-    start_date = Column(DateTime, default=datetime.datetime.utcnow)
+    start_date = Column(DateTime, default=datetime.datetime.now(datetime.UTC))
+    end_date = Column(DateTime, default=datetime.datetime.now(datetime.UTC))
     end_type = Column(Integer, default=0)
     experience_to_get = Column(Integer)
 
-class Session(Base):
-    __tablename__ = 'sessions'
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey('users.id'))

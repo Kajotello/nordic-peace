@@ -1,12 +1,20 @@
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, Response
 from fastapi.responses import RedirectResponse
 from fastapi import FastAPI, Depends, Request, Cookie
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from app.schemas import Jwt
+from app.database import get_db
 import requests
 from jose import jwt
 from dotenv import load_dotenv
 import os
+from typing import Annotated
+from app.cfg import ACCESS_TOKEN_EXPIRE_MINUTES, HASHING_ALGORITHM, SECRET_KEY
+from passlib.context import CryptContext
+from datetime import timedelta, datetime, timezone
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 auth_router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 from jose import jwt
@@ -16,6 +24,89 @@ GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URI = "http://127.0.0.1:8080/google-auth"
 SCOPE = "https://www.googleapis.com/auth/calendar"
+
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[HASHING_ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    user = db.query(models.User).filter(models.User.nick == username).first()
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+def authenticate_user(username: str, password: str, db):
+    user = db.query(models.User).filter(models.User.nick == username).first()
+    if not user:
+        return False
+    if not pwd_context.verify(password, user.hash_password):
+        return False
+    return user
+
+
+def create_access_token(data: dict, expires_delta):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=HASHING_ALGORITHM)
+    return encoded_jwt
+
+
+@auth_router.post("/register")
+def register(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+             response: Response,
+             db: Session = Depends(get_db)) -> Jwt:
+    hashed_password = pwd_context.hash(form_data.password)
+
+    nick_exists = db.query(models.User).filter(models.User.nick == form_data.username).first()
+    if nick_exists is not None:
+        raise HTTPException(status_code=409, detail=f"User with nick: '{form_data.username}' already exists")
+    
+    db_user = models.User(nick=form_data.username, hash_password=hashed_password)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"user_nick": db_user.nick, "user_id": db_user.id}, expires_delta=access_token_expires
+    )
+    response.set_cookie(key='jwt_cookie', value=access_token)
+    return Jwt(jwt=access_token)
+
+
+@auth_router.post("/login")
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    response: Response,
+    db: Session = Depends(get_db)
+) -> Jwt:
+    user = authenticate_user(form_data.username, form_data.password, db)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"user_nick": user.nick, "user_id": user.id}, expires_delta=access_token_expires
+    )
+    response.set_cookie(key='jwt_cookie', value=access_token)
+    return Jwt(jwt=access_token)
 
 
 @auth_router.get("/login/google/")
