@@ -1,10 +1,6 @@
-import logo from './logo.svg'
-import { ToolBar } from './components/Toolbar'
-import { Background } from './Backgrounnd'
-import { Box, Button } from '@mui/material'
+import { Box } from '@mui/material'
 import { Controls } from './Contorls'
-import { useContext, useEffect, useState } from 'react'
-import { ShipContext } from './ShipContext'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 
 function Game(props) {

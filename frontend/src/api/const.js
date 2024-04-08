@@ -1,1 +1,1 @@
-export const SERVER_ADRESS = '/api'
+export const SERVER_ADDRESS = 'http://localhost:8080'

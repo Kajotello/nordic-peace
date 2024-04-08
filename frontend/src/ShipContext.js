@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useSpring } from '@react-spring/web'
 import PoissonDiskSampling from 'poisson-disk-sampling'
 

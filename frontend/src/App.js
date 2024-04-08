@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import ReactDOM from 'react-dom/client'
 import './index.css'
 import Game from './Game'
-import reportWebVitals from './reportWebVitals'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { Friends } from './Friends'
 import { Box } from '@mui/material'
@@ -21,6 +19,7 @@ export default function App() {
     useEffect(() => {
         const fetchData = async () => {
             const userData = await verifyUser()
+            console.log(userData)
             if (userData.hasOwnProperty('nick')) {
                 setToken('pla')
                 setUserData(userData)

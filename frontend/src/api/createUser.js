@@ -1,4 +1,4 @@
-import { SERVER_ADRESS } from './const'
+import { SERVER_ADDRESS } from './const'
 
 export const createUser = async (username, password) => {
     const body = JSON.stringify({
@@ -8,7 +8,7 @@ export const createUser = async (username, password) => {
         experience: 0,
     })
 
-    return await fetch(`${SERVER_ADRESS}/users/register `, {
+    return await fetch(`${SERVER_ADDRESS}/users/register `, {
         method: 'POST',
         body: body,
         headers: { 'Content-Type': 'application/json' },

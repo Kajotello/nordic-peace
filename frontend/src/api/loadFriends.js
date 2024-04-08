@@ -1,7 +1,7 @@
-import { SERVER_ADRESS } from './const'
+import { SERVER_ADDRESS } from './const'
 
 export const getFollowed = async () => {
-    return await fetch(`${SERVER_ADRESS}/users/list_followed `, {
+    return await fetch(`${SERVER_ADDRESS}/users/list_followed `, {
         method: 'GET',
     }).then((res) => res.json())
 }

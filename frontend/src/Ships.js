@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useContext, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
 import { OrthographicCamera } from '@react-three/drei'
 import useMeasure from 'react-use-measure'

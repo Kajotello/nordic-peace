@@ -1,7 +1,7 @@
-import { SERVER_ADRESS } from './const'
+import { SERVER_ADDRESS } from './const'
 
 export const loginGoogle = async () => {
-    return await fetch(`${SERVER_ADRESS}/login/google`, {
+    return await fetch(`${SERVER_ADDRESS}/login/google`, {
         method: 'GET',
     }).then((res) => res.json())
 }

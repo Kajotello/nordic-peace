@@ -1,4 +1,4 @@
-import { SERVER_ADRESS } from './const'
+import { SERVER_ADDRESS } from './const'
 
 export const startJourney = async (duration, boatType) => {
     const data = new Date()
@@ -8,7 +8,7 @@ export const startJourney = async (duration, boatType) => {
         ship_tier: boatType,
     })
 
-    return await fetch(`${SERVER_ADRESS}/journeys/`, {
+    return await fetch(`${SERVER_ADDRESS}/journeys/`, {
         method: 'POST',
         body: body,
         headers: {

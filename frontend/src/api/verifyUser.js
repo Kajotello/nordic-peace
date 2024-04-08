@@ -1,7 +1,8 @@
-import { SERVER_ADRESS } from './const'
+import { SERVER_ADDRESS } from './const'
 
-export const verifyUser = async (token) => {
-    return await fetch(`${SERVER_ADRESS}/users/user`, {
+export const verifyUser = async () => {
+    console.log('plapal')
+    return await fetch(`${SERVER_ADDRESS}/users/user-data`, {
         method: 'GET',
-    }).then((res) => res.json())
+    }).then((res) => res)
 }

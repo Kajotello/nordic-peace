@@ -1,7 +1,7 @@
-import { SERVER_ADRESS } from './const'
+import { SERVER_ADDRESS } from './const'
 
 export const getAllBoats = async () => {
-    return await fetch(`${SERVER_ADRESS}/ships/`, {
+    return await fetch(`${SERVER_ADDRESS}/ships/`, {
         method: 'GET',
     }).then((res) => res.json())
 }
