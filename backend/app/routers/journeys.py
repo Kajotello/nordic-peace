@@ -38,7 +38,7 @@ def create_journey(journey: schemas.Journey, current_user: Annotated[schemas.Use
     if journey.duration < 0:
         raise HTTPException(status_code=400, detail="Duration cannot be negative")
     
-    if journey.start_date - datetime.datetime.now() > datetime.timedelta(days=3):
+    if journey.start_date - datetime.datetime.now(datetime.timezone.utc) > datetime.timedelta(days=3):
         experience = journey.duration * 3
     else:
         experience = journey.duration
@@ -59,11 +59,11 @@ def end_journey(end_journey: schemas.EndJourney,
         raise HTTPException(status_code=400, detail="Journey end-type has to be in range 0 and 2")
     journey = db.query(models.Journey).filter(models.Journey.id == end_journey.id, models.Journey.user_id == current_user.id).first()
 
-    if end_journey.end_type == 0 and datetime.datetime.now(datetime.UTC) < journey.start_date + datetime.timedelta(seconds=journey.duration-5):
+    if end_journey.end_type == 0 and datetime.datetime.now(datetime.timezone.utc) < journey.start_date + datetime.timedelta(seconds=journey.duration-5):
         raise HTTPException(status_code=400, detail="Journey cannot be ended successfully before time")
 
     journey.end_type = end_journey.end_type
-    journey.end_time = datetime.datetime.now(datetime.UTC)
+    journey.end_time = datetime.datetime.now(datetime.timezone.utc)
     
     if end_journey.end_type == 0:
         current_user.experience += journey.experience_to_get
