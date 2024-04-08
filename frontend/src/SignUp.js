@@ -12,17 +12,38 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import Typography from '@mui/material/Typography'
 import Container from '@mui/material/Container'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
+import { createUser } from './api/createUser'
+import { useNavigate } from 'react-router'
+import { useState } from 'react'
+import { verifyUser } from './api/verifyUser'
 
 // TODO remove, this demo shouldn't need to reset the theme.
 
 export default function SignUp(props) {
-    const handleSubmit = (event) => {
+    const navigate = useNavigate()
+    const [emptyInput, setEmptyInput] = useState(false)
+    const [duplicatedUsername, setDuplicatedUsername] = useState(false)
+
+    const handleSubmit = async (event) => {
         event.preventDefault()
         const data = new FormData(event.currentTarget)
-        console.log({
-            email: data.get('email'),
-            password: data.get('password'),
-        })
+        if (
+            data.get('username').length === 0 ||
+            data.get('password').length === 0
+        )
+            setEmptyInput(true)
+        const token = await createUser(
+            data.get('username'),
+            data.get('password')
+        )
+        const userData = await verifyUser(token)
+        if (token.hasOwnProperty('jwt')) {
+            props.setUserData(userData)
+            let delay = await delay(1000)
+            navigate('/profile')
+        } else {
+            setDuplicatedUsername(true)
+        }
     }
 
     return (
@@ -47,6 +68,16 @@ export default function SignUp(props) {
                 >
                     Sign up
                 </Typography>
+                {emptyInput && (
+                    <Typography sx={{ color: 'red' }}>
+                        Username and password cannot be empty
+                    </Typography>
+                )}
+                {duplicatedUsername && (
+                    <Typography sx={{ color: 'red' }}>
+                        Username already exist
+                    </Typography>
+                )}
                 <Box
                     component="form"
                     noValidate

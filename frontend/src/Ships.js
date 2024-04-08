@@ -1,24 +1,27 @@
 import * as THREE from 'three'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber'
-import { OrbitControls, OrthographicCamera } from '@react-three/drei'
+import { OrthographicCamera } from '@react-three/drei'
 import useMeasure from 'react-use-measure'
 import { createNoise3D } from 'simplex-noise'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
+import { useSpring } from '@react-spring/web'
+import { ShipContext } from './ShipContext'
 
 const noise = createNoise3D()
 const swingNoise = createNoise3D()
+const boatColorMap = ['peru', 'darkgray', 'dimgray', 'goldenrod', 'deepskyblue']
 
 const WaterChunk = (props) => {
     const [time, setTime] = useState(0)
-    const geometry = useMemo(() => {
+    const [geometry, setGeometry] = useState(() => {
         return new THREE.PlaneGeometry(
             props.size,
             props.size,
             props.resolution,
             props.resolution
         )
-    }, [])
+    })
 
     useFrame(({ clock }) => {
         setTime(clock.getElapsedTime() / 3)
@@ -34,21 +37,35 @@ const WaterChunk = (props) => {
 
             z =
                 noise(
-                    (x + props.x * props.size) * props.scale,
-                    (y + -props.y * props.size) * props.scale,
+                    (x +
+                        Math.floor(
+                            props.pos[0] - props.offset[0] / props.size
+                        ) *
+                            props.size) *
+                        props.scale,
+                    (y +
+                        Math.floor(
+                            -props.pos[1] + props.offset[1] / props.size
+                        ) *
+                            props.size) *
+                        props.scale,
                     time
                 ) * props.height
 
             position.setXYZ(i, x, y, z)
             position.needsUpdate = true
         }
-    }, [time])
+    }, [time, geometry, props])
 
     return (
         <mesh
             geometry={geometry}
             rotation={[-Math.PI / 2, 0, 0]}
-            position={[props.x * props.size, 0, props.y * props.size]}
+            position={[
+                (props.offset[0] % props.size) + props.pos[0] * props.size,
+                0,
+                (props.offset[1] % props.size) + props.pos[1] * props.size,
+            ]}
             receiveShadow={true}
         >
             <meshStandardMaterial
@@ -67,55 +84,62 @@ const Water = (props) => {
 
     const gridSize = 7
 
-    /*
     const state = useThree()
 
-    useEffect(() => {
-        const callback = (e) => {
-            let x = (2 * e.offsetX) / e.target.width - 1
-            let y = (2 * e.offsetY) / e.target.height - 1
+    const [chunks, setChunks] = useState([])
+    const [waterOffset, setWaterOffset] = useState([0, 0])
+    const shipContext = useContext(ShipContext)
 
-            const raycaster = new THREE.Raycaster()
-            raycaster.setFromCamera(new THREE.Vector2(x, y), state.camera)
-            console.log(raycaster)
-            console.log(
-                x,
-                y,
-                raycaster.ray.intersectPlane(
-                    new THREE.Plane(new THREE.Vector3(0, 1, 0)),
-                    new THREE.Vector3(0, 0, 0)
-                )
-            )
-        }
-        document.addEventListener('mousedown', callback)
+    const failTimeout = useRef(null)
 
-        return () => {
-            document.removeEventListener('mousedown', callback)
-        }
-    })
-    */
+    useFrame(() => {
+        const offset = [
+            Math.round((state.camera.position.x - 100) / size),
+            Math.round((state.camera.position.z - 100) / size),
+        ]
 
-    const chunks = useMemo(() => {
         const result = []
         for (let x = -gridSize; x <= gridSize; x++) {
             for (let y = -gridSize; y <= gridSize; y++) {
-                result.push([x, y])
+                result.push([x + offset[0], y + offset[1]])
             }
         }
 
-        return result
+        setChunks(result)
+        if (['main', 'ocean'].indexOf(shipContext.type) !== -1) {
+            setWaterOffset((waterOffset) => [
+                waterOffset[0],
+                waterOffset[1] + 0.02,
+            ])
+        }
+
+        if (
+            failTimeout.current === null &&
+            shipContext.instability.get() === 10
+        ) {
+            failTimeout.current = setTimeout(() => {
+                shipContext.setType('failure')
+                shipContext.setParams((oldParams) => ({
+                    ...oldParams,
+                    instability: 3,
+                }))
+
+                failTimeout.current = null
+            }, 2000)
+        }
     }, [])
 
     return (
         <>
             {chunks.map(([x, y]) => (
                 <WaterChunk
-                    x={x}
-                    y={y}
+                    key={`${x},${y}`}
+                    pos={[x, y]}
+                    offset={waterOffset}
                     size={size}
                     resolution={resolution}
                     scale={scale}
-                    height={height * props.instability}
+                    height={height * shipContext.instability.get()}
                 />
             ))}
         </>
@@ -127,17 +151,46 @@ const Camera = (props) => {
     const frustum = 800
     const horizonal = ratio < 1 ? frustum / ratio : frustum
     const vertical = ratio < 1 ? frustum : frustum * ratio
+
+    const shipContext = useContext(ShipContext)
+
+    const { x, y, z, zoom } = useSpring({
+        x: shipContext.cameraPosition[0] + 100,
+        y: shipContext.cameraPosition[1] + 82,
+        z: shipContext.cameraPosition[2] + 100,
+        zoom: shipContext.cameraZoom,
+        config: {
+            mass: 1,
+            friction: 50,
+            tension: 60,
+        },
+    })
+
+    const { camera } = useThree()
+
+    /*
+    useEffect(() => {
+        setInterval(() => setMove((move) => !move), 2000)
+    }, [])
+    */
+
+    useFrame(() => {
+        camera.position.setX(x.get())
+        camera.position.setY(y.get())
+        camera.position.setZ(z.get())
+        camera.zoom = zoom.get()
+        camera.updateProjectionMatrix()
+    })
+
     return (
         <OrthographicCamera
             makeDefault
-            zoom={80}
             top={vertical}
             bottom={-vertical}
             left={-horizonal}
             right={horizonal}
             near={0.1}
             far={2000}
-            position={[100, 80, 100]}
             rotation={new THREE.Euler(-Math.PI / 6, Math.PI / 4, 0, 'YXZ')}
         />
     )
@@ -148,10 +201,22 @@ const Boat = (props) => {
     const wakeTexture = useLoader(THREE.TextureLoader, '/assets/wake.png')
 
     const [swing, setSwing] = useState([0, 0])
+    const shipContext = useContext(ShipContext)
+
+    const spring = useSpring({
+        x: props.position[0],
+        y: -0.2,
+        z: props.position[1],
+        config: {
+            mass: 1,
+            friction: 70,
+            tension: 60,
+        },
+    })
 
     useFrame(({ clock }) => {
         setSwing([
-            (props.instability *
+            (shipContext.instability.get() *
                 (Math.PI *
                     (swingNoise(
                         props.position[0],
@@ -160,7 +225,7 @@ const Boat = (props) => {
                     ) -
                         0.5))) /
                 50,
-            (props.instability *
+            (shipContext.instability.get() *
                 (Math.PI *
                     (swingNoise(
                         props.position[0] + 3,
@@ -172,7 +237,7 @@ const Boat = (props) => {
         ])
     })
 
-    const boatPosition = [props.position[0], -0.2, props.position[1]]
+    const boatPosition = [spring.x.get(), spring.y.get(), spring.z.get()]
 
     return (
         <>
@@ -194,68 +259,29 @@ const Boat = (props) => {
 }
 
 const BoatFleet = (props) => {
-    const state = useThree()
+    const shipContext = useContext(ShipContext)
 
     const boats = useMemo(() => {
         const result = []
-
-        const visited = new Set([])
-        const positions = [[0, 0]]
-        for (let [type, count] of props.boats) {
-            while (count > 0) {
-                const pos = positions.shift()
-                if (!visited.has(`${pos[0]},${pos[1]}`)) {
-                    visited.add(`${pos[0]},${pos[1]}`)
-                    positions.push([pos[0] - 1, pos[1]])
-                    positions.push([pos[0] + 1, pos[1]])
-                    positions.push([pos[0], pos[1] - 1])
-                    positions.push([pos[0], pos[1] + 1])
-
-                    if (Math.random() > 0.5 && (pos[0] !== 0 || pos[1] !== 0)) {
-                        result.push({
-                            type,
-                            pos: [
-                                4 * pos[0] + 2 * (Math.random() - 0.5),
-                                5 * pos[1] + 2 * (Math.random() - 0.5),
-                            ],
-                        })
-                        count -= 1
-                    }
-                }
-            }
+        let i = 0
+        for (const type of props.boats) {
+            result.push({
+                type,
+                pos: shipContext.shipPositions[i],
+                index: i,
+            })
+            i += 1
         }
-
-        console.log(result)
 
         return result
-    }, [props.boats])
-
-    useEffect(() => {
-        const screenPositions = boats.map(({ type, pos }) =>
-            new THREE.Vector3(pos[0], 0, pos[1]).project(state.camera)
-        )
-
-        let maxX = -Infinity
-        let maxY = -Infinity
-        console.log(screenPositions)
-
-        for (const pos of screenPositions) {
-            maxX = Math.max(maxX, Math.abs(pos.x))
-            maxY = Math.max(maxY, Math.abs(pos.y))
-        }
-
-        const zoomFactor = 0.8 / Math.max(maxX, maxY)
-        console.log(maxX, maxY, zoomFactor)
-        state.camera.zoom *= zoomFactor
-        state.camera.updateProjectionMatrix()
-    }, [boats, state.camera])
+    }, [props.boats, shipContext.shipPositions])
 
     return (
         <>
-            {boats.map(({ type, pos }) => (
+            {boats.map(({ type, pos, index }) => (
                 <Boat
-                    color="green"
-                    instability={3}
+                    key={`${index}`}
+                    color={boatColorMap[type]}
                     position={pos}
                 />
             ))}
@@ -265,6 +291,9 @@ const BoatFleet = (props) => {
 
 function ShipBackground() {
     const [ref, bounds] = useMeasure()
+    const shipContext = useContext(ShipContext)
+
+    const type = shipContext.type
 
     return (
         <Canvas
@@ -285,19 +314,20 @@ function ShipBackground() {
                 castShadow={true}
             />
 
-            <Water instability={3} />
-            <Boat
-                color="goldenrod"
-                instability={3}
-                position={[0, 0]}
-            />
+            <Water />
 
-            <BoatFleet boats={[[5, 15]]} />
+            {shipContext.mainBoatPosition && (
+                <Boat
+                    color={boatColorMap[shipContext.params.boatType]}
+                    position={shipContext.mainBoatPosition}
+                />
+            )}
 
-            <axesHelper args={[5]} />
+            {['ocean', 'empty'].indexOf(type) === -1 && (
+                <BoatFleet boats={shipContext.boats} />
+            )}
 
             <Camera bounds={bounds} />
-            <OrbitControls />
         </Canvas>
     )
 }

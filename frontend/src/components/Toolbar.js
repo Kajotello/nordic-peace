@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import AppBar from '@mui/material/AppBar'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
@@ -10,6 +10,8 @@ import { Avatar, MenuItem } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import Menu from '@mui/material/Menu'
 import { useNavigate } from 'react-router'
+import { ShipContext } from '../ShipContext'
+
 export function ToolBar(props) {
     const navigate = useNavigate()
 
@@ -22,6 +24,8 @@ export function ToolBar(props) {
     const handleCloseNavMenu = () => {
         setAnchorElNav(null)
     }
+
+    const shipContext = useContext(ShipContext)
 
     const SUBPAGES = [
         {
@@ -96,7 +100,9 @@ export function ToolBar(props) {
                             mr: 2,
                             height: '5vh',
                         }}
-                        onClick={() => navigate('/app')}
+                        onClick={() => {
+                            navigate('/app')
+                        }}
                     ></Box>
                     <Typography>NORDIC PEACE</Typography>
                     {props.isLogged ? (
