@@ -1,38 +1,41 @@
 import React, { useEffect, useState } from 'react'
 import './index.css'
-import Game from './Game'
+import Game from './layouts/Game'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { Friends } from './Friends'
+import { Friends } from './layouts/Friends'
 import { Box } from '@mui/material'
-import Profile from './Profile'
-import SignInPage from './SignInPage'
-import SignUpPage from './SignUpPage'
-import ShipBackground from './Ships'
-import { ShipContextProvider } from './ShipContext'
+import Profile from './layouts/Profile'
+import SignInPage from './layouts/SignInPage'
+import SignUpPage from './layouts/SignUpPage'
+import ShipBackground from './components/Ships'
+import { ShipContextProvider } from './contexts/ShipContext'
 import { verifyUser } from './api/verifyUser'
 import Cookie from 'js-cookie'
 import { amber } from '@mui/material/colors'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
-import { MainPage } from './MainPage'
+import { MainPage } from './layouts/MainPage'
+import Protected from './components/Protected'
 
 export default function App() {
-    useEffect(() => {
-        const fetchData = async () => {
-            const userData = await verifyUser()
-            console.log(userData)
-            if (userData.hasOwnProperty('nick')) {
-                setToken('pla')
+    const fetchData = async () => {
+        await verifyUser()
+            .then((res) => {
+                console.log(res)
+                const userData = res.data
                 setUserData(userData)
-            } else {
-                Cookie.remove('jwt_cookie', { path: '/' })
-            }
-            setisLoading(false)
-        }
+            })
+            .catch((error) => {
+                if (error.response.status === 401) {
+                    Cookie.remove('token', { path: '/' })
+                }
+            })
+        setIsLoading(false)
+    }
+    useEffect(() => {
         fetchData()
     }, [])
 
-    const [token, setToken] = useState(null)
-    const [isLoading, setisLoading] = useState(true)
+    const [isLoading, setIsLoading] = useState(true)
     const [userDataState, setUserData] = useState(null)
 
     const theme = createTheme({
@@ -50,52 +53,75 @@ export default function App() {
     const router = createBrowserRouter([
         {
             path: '/',
-            element: <MainPage isLogged={token !== null} />,
+            element: <MainPage isLogged={userDataState !== null} />,
         },
         {
             path: '/app',
             element: (
-                <Game
-                    token={token}
-                    isLogged={token !== null}
-                />
+                <Protected
+                    condition={userDataState !== null}
+                    redirectTo="/"
+                >
+                    <Game isLogged={userDataState !== null} />
+                </Protected>
             ),
         },
         {
             path: '/profile',
             element: (
-                <Profile
-                    userData={userDataState}
-                    isLogged={token !== null}
-                    logOut={() => {
-                        Cookie.remove('jwt_cookie', { path: '/' })
-                        setToken(null)
-                    }}
-                    setUserData={setUserData}
-                />
+                <Protected
+                    condition={userDataState !== null}
+                    redirectTo="/"
+                >
+                    <Profile
+                        userData={userDataState}
+                        isLogged={userDataState !== null}
+                        logOut={() => {
+                            Cookie.remove('token', { path: '/' })
+                            setUserData(null)
+                        }}
+                        setUserData={setUserData}
+                    />
+                </Protected>
             ),
         },
         {
             path: '/friends',
-            element: <Friends isLogged={token !== null} />,
+            element: (
+                <Protected
+                    condition={userDataState !== null}
+                    redirectTo="/"
+                >
+                    <Friends isLogged={userDataState !== null} />
+                </Protected>
+            ),
         },
         {
             path: '/sign-in',
             element: (
-                <SignInPage
-                    isLogged={token !== null}
-                    setToken={setToken}
-                    setUserData={setUserData}
-                />
+                <Protected
+                    condition={userDataState === null}
+                    redirectTo="profile"
+                >
+                    <SignInPage
+                        isLogged={userDataState !== null}
+                        setUserData={setUserData}
+                    />
+                </Protected>
             ),
         },
         {
             path: '/sign-up',
             element: (
-                <SignUpPage
-                    setUserData={setUserData}
-                    isLogged={token !== null}
-                />
+                <Protected
+                    condition={userDataState === null}
+                    redirectTo="profile"
+                >
+                    <SignUpPage
+                        setUserData={setUserData}
+                        isLogged={userDataState !== null}
+                    />
+                </Protected>
             ),
         },
     ])

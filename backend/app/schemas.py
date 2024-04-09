@@ -20,9 +20,9 @@ class JourneyResponseModel(BaseModel):
     ship_tier: int
     duration: int
     start_date: datetime
-    end_date: datetime
+    # end_date: datetime
     experience_to_get: int
-    end_type: int = 0
+    end_type: int = -1
 
     class Config:
         orm_mode = True
@@ -61,6 +61,14 @@ class Friends(BaseModel):
     id: int
     following_user_id: int
     followed_user_id: int
+    class Config:
+        orm_mode = True
+
+# Boats
+
+class Boat(BaseModel):
+    ship_tier: int
+
     class Config:
         orm_mode = True
 

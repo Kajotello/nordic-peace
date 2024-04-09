@@ -1,16 +1,9 @@
 import { SERVER_ADDRESS } from './const'
+import qs from 'qs'
 
-export const createUser = async (username, password) => {
-    const body = JSON.stringify({
-        nick: username,
-        password: password,
-        is_premium: false,
-        experience: 0,
-    })
-
-    return await fetch(`${SERVER_ADDRESS}/users/register `, {
+export const createUser = async (form) => {
+    return await fetch(`${SERVER_ADDRESS}/register`, {
         method: 'POST',
-        body: body,
-        headers: { 'Content-Type': 'application/json' },
+        body: form,
     }).then((res) => res.json())
 }

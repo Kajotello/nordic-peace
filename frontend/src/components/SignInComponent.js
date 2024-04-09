@@ -8,38 +8,33 @@ import Box from '@mui/material/Box'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import Typography from '@mui/material/Typography'
 import Container from '@mui/material/Container'
-import { createUser } from './api/createUser'
+import { login } from '../api/login'
 import { useNavigate } from 'react-router'
-import { useState } from 'react'
-import { verifyUser } from './api/verifyUser'
+import Cookie from 'js-cookie'
+import verifyUser from '../api/verifyUser'
 
-// TODO remove, this demo shouldn't need to reset the theme.
-
-export default function SignUp(props) {
+export default function SignIn(props) {
     const navigate = useNavigate()
-    const [emptyInput, setEmptyInput] = useState(false)
-    const [duplicatedUsername, setDuplicatedUsername] = useState(false)
+    const [wrongLogin, setWrongLogin] = React.useState(false)
+
+    React.useEffect(() => {
+        if (props.isLogged) navigate('/profile')
+    }, [])
 
     const handleSubmit = async (event) => {
         event.preventDefault()
         const data = new FormData(event.currentTarget)
-        if (
-            data.get('username').length === 0 ||
-            data.get('password').length === 0
-        )
-            setEmptyInput(true)
-        const token = await createUser(
-            data.get('username'),
-            data.get('password')
-        )
-        const userData = await verifyUser(token)
-        if (token.hasOwnProperty('jwt')) {
-            props.setUserData(userData)
-            let delay = await delay(1000)
-            navigate('/profile')
-        } else {
-            setDuplicatedUsername(true)
-        }
+        await login()
+            .then((res) => {
+                const jwt = res.data
+                Cookie.set('token', jwt)
+                props.setUserData(await verifyUser())
+            })
+            .catch((error) => {
+                if (error.response.status === 401) {
+                    Cookie.remove('token', { path: '/' })
+                }
+            })
     }
 
     return (
@@ -47,13 +42,13 @@ export default function SignUp(props) {
             <Box
                 sx={{
                     marginTop: 8,
+                    p: 2,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    bgcolor: 'white',
-                    p: 2,
                     borderRadius: 8,
                 }}
+                bgcolor="white"
             >
                 <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
                     <LockOutlinedIcon />
@@ -62,43 +57,38 @@ export default function SignUp(props) {
                     component="h1"
                     variant="h5"
                 >
-                    Sign up
+                    Sign in
                 </Typography>
-                {emptyInput && (
-                    <Typography sx={{ color: 'red' }}>
-                        Username and password cannot be empty
-                    </Typography>
-                )}
-                {duplicatedUsername && (
-                    <Typography sx={{ color: 'red' }}>
-                        Username already exist
+                {wrongLogin && (
+                    <Typography color={'red'}>
+                        Wrong username or password
                     </Typography>
                 )}
                 <Box
                     component="form"
-                    noValidate
                     onSubmit={handleSubmit}
-                    sx={{ mt: 3 }}
+                    noValidate
+                    sx={{ mt: 1 }}
                 >
                     <TextField
+                        margin="normal"
                         required
                         fullWidth
                         id="username"
-                        marginBottom
                         label="Username"
                         name="username"
                         autoComplete="username"
-                        sx={{ mb: 3 }}
+                        autoFocus
                     />
                     <TextField
+                        margin="normal"
                         required
                         fullWidth
                         name="password"
                         label="Password"
                         type="password"
                         id="password"
-                        autoComplete="new-password"
-                        sx={{ mb: 3 }}
+                        autoComplete="current-password"
                     />
                     <Button
                         type="submit"
@@ -106,18 +96,15 @@ export default function SignUp(props) {
                         variant="contained"
                         sx={{ mt: 3, mb: 2 }}
                     >
-                        Sign Up
+                        Sign In
                     </Button>
-                    <Grid
-                        container
-                        justifyContent="flex-end"
-                    >
+                    <Grid container>
                         <Grid item>
                             <Link
-                                href="sign-in"
+                                href="sign-up"
                                 variant="body2"
                             >
-                                Already have an account? Sign in
+                                {"Don't have an account? Sign Up"}
                             </Link>
                         </Grid>
                     </Grid>

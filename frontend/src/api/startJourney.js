@@ -1,4 +1,5 @@
 import { SERVER_ADDRESS } from './const'
+import Cookie from 'js-cookie'
 
 export const startJourney = async (duration, boatType) => {
     const data = new Date()
@@ -8,11 +9,12 @@ export const startJourney = async (duration, boatType) => {
         ship_tier: boatType,
     })
 
-    return await fetch(`${SERVER_ADDRESS}/journeys/`, {
+    return await fetch(`${SERVER_ADDRESS}/journeys/create`, {
         method: 'POST',
         body: body,
         headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${Cookie.get('token')}`,
         },
     }).then((res) => res.json())
 }

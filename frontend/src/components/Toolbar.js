@@ -9,7 +9,7 @@ import { Avatar, MenuItem } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import Menu from '@mui/material/Menu'
 import { useNavigate } from 'react-router'
-import { ShipContext } from '../ShipContext'
+import { ShipContext } from '../contexts/ShipContext'
 
 export function ToolBar(props) {
     const navigate = useNavigate()

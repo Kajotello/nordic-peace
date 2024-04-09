@@ -1,15 +1,11 @@
 import { Box } from '@mui/material'
-import SignUp from './SignUp'
-import { ToolBar } from './components/Toolbar'
+import SignIn from '../components/SignInComponent'
+import { ToolBar } from '../components/Toolbar'
 import { useContext, useEffect, useState } from 'react'
-import { ShipContext } from './ShipContext'
+import { ShipContext } from '../contexts/ShipContext'
 
-export default function SignUpPage(props) {
+export default function SignInPage(props) {
     const shipContext = useContext(ShipContext)
-
-    useEffect(() => {
-        shipContext.setType('empty')
-    }, [])
 
     return (
         <div>
@@ -21,9 +17,11 @@ export default function SignUpPage(props) {
                 flexDirection="column"
             >
                 <ToolBar isLogged={props.isLogged} />
-                <SignUp
+
+                <SignIn
                     isLogged={props.isLogged}
                     setUserData={props.setUserData}
+                    setToken={props.setToken}
                 />
             </Box>
         </div>

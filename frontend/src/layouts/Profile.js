@@ -1,18 +1,13 @@
-import { ToolBar } from './components/Toolbar'
+import { ToolBar } from '../components/Toolbar'
 import { Box, Button, Typography } from '@mui/material'
 import { useEffect, useContext } from 'react'
-import { ShipContext } from './ShipContext'
+import { ShipContext } from '../contexts/ShipContext'
 import { useNavigate } from 'react-router'
-import { loginGoogle } from './api/loginGoogle'
+import { loginGoogle } from '../api/loginGoogle'
 
 function Profile(props) {
     const shipContext = useContext(ShipContext)
     const navigate = useNavigate()
-
-    useEffect(() => {
-        if (!props.isLogged) navigate('/')
-        shipContext.setType('empty')
-    }, [])
 
     return (
         <>

@@ -1,14 +1,14 @@
 import { Box, Button, Grow, Slide, TextField, Typography } from '@mui/material'
-import { ToolBar } from './components/Toolbar'
+import { ToolBar } from '../components/Toolbar'
 import { DataGrid } from '@mui/x-data-grid'
 import { useEffect, useContext, useState } from 'react'
-import { ShipContext } from './ShipContext'
+import { ShipContext } from '../contexts/ShipContext'
 import { useNavigate } from 'react-router'
-import { getFollowed } from './api/loadFriends'
-import { addFriend } from './api/addFriend'
-import { getBoats } from './api/getBoats'
-import { getFriendBoats } from './api/getFriendBoats'
-import { getAllBoats } from './api/getAllBoats'
+import { getFollowed } from '../api/loadFriends'
+import { addFriend } from '../api/addFriend'
+import { getBoats } from '../api/getBoats'
+import { getFriendBoats } from '../api/getFriendBoats'
+import { getAllBoats } from '../api/getAllBoats'
 
 const columns = [
     {
@@ -84,7 +84,6 @@ export function Friends(props) {
             }
         }
         fetchData()
-        if (!props.isLogged) navigate('/')
         shipContext.setType('empty')
     }, [])
 

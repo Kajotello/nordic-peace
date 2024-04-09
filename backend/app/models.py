@@ -24,7 +24,7 @@ class Journey(Base):
     ship_tier = Column(Integer)
     duration = Column(Integer)
     start_date = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
-    end_date = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
+    # end_date = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
     end_type = Column(Integer, default=0)
-    experience_to_get = Column(Integer)
+    experience_to_get = Column(Integer, default=0)
 

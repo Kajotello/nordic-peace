@@ -1,4 +1,5 @@
 import { SERVER_ADDRESS } from './const'
+import Cookie from 'js-cookie'
 
 export const endJourney = async (journeyId, endType) => {
     const body = JSON.stringify({
@@ -11,6 +12,7 @@ export const endJourney = async (journeyId, endType) => {
         body: body,
         headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${Cookie.get('token')}`,
         },
     }).then((res) => res.json())
 }

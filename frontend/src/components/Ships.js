@@ -6,7 +6,7 @@ import useMeasure from 'react-use-measure'
 import { createNoise3D } from 'simplex-noise'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
 import { useSpring } from '@react-spring/web'
-import { ShipContext } from './ShipContext'
+import { ShipContext } from '../contexts/ShipContext'
 
 const noise = createNoise3D()
 const swingNoise = createNoise3D()

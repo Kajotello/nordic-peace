@@ -1,9 +1,8 @@
+import axios from 'axios'
 import { SERVER_ADDRESS } from './const'
 
-export const login = async (username, password) => {
-    return await fetch(`${SERVER_ADDRESS}/users/login`, {
-        method: 'POST',
-        body: JSON.stringify({ nick: username, password: password }),
-        headers: { 'Content-Type': 'application/json' },
-    }).then((res) => res.json())
+export const login = async (form) => {
+    return await axios
+        .post(`${SERVER_ADDRESS}/users/user-data`, form)
+        .then((res) => res)
 }
