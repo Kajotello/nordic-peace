@@ -13,4 +13,4 @@ Postanowiliśmy stworzyć aplikację, która pomoże rozwiązać zarówno proble
 Frontend zbudowany został z wykorzystaniem języka JS i biblioteki React oraz Three.JS. Backend został stworzony w języku Python z wykorzystaniem frameworka FastAPI.
 
 ### Demo
-
+<img src='./img/boat.gif'/>
